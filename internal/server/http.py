@@ -8,12 +8,13 @@
 import os
 
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 
 from config import Config
 from internal.exception import CustomException
+from internal.model import App
 from internal.router import Router
 from pkg.response import Response, json, HttpCode
+from pkg.sqlalchemy import SQLAlchemy
 
 
 class Http(Flask):
@@ -29,6 +30,9 @@ class Http(Flask):
         self.register_error_handler(Exception, self._register_error_handler)
 
         db.init_app(self)
+        with self.app_context():
+            _ = App()
+            db.create_all()
 
         # Register application router
         router.register_router(self)
