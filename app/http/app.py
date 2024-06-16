@@ -6,6 +6,7 @@
 @File : app.py
 """
 import dotenv
+from flask_migrate import Migrate
 from injector import Injector
 
 from config import Config
@@ -19,7 +20,7 @@ conf = Config()
 injector = Injector([ExtensionModule])
 
 app = Http(__name__, router=injector.get(Router),
-           conf=conf, db=injector.get(SQLAlchemy))
+           conf=conf, db=injector.get(SQLAlchemy), migrate=injector.get(Migrate))
 
 if __name__ == '__main__':
     app.run(debug=True)
