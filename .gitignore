@@ -3,3 +3,5 @@ tmp/*
 study/*
 
 .env
+*.pyc
+internal/migration/*
