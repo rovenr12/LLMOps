@@ -5,13 +5,13 @@
 @Author : rovenr32@gmail.com
 @File : app_handler.py
 """
-import os
 import uuid
 from dataclasses import dataclass
 
-from flask import request
 from injector import inject
-from openai import OpenAI
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_openai import ChatOpenAI
 
 from internal.exception import FailException
 from internal.schema.app_schema import CompletionRequest
@@ -41,31 +41,18 @@ class AppHandler:
         app = self.app_service.delete_app(id)
         return success_message(f"The app was successfully deleted, id: {app.id}")
 
-    def completion(self):
+    def debug(self, app_id: uuid.UUID):
         req = CompletionRequest()
         if not req.validate():
             return validate_error_json(req.errors)
 
-        # extract input from interface
-        query = request.json.get("query")
-        # build OpenAPI client, and send request
-        client = OpenAI(base_url=os.getenv("OPENAI_API_BASE"))
-        # get request response and send response to front-end
-        completion = client.chat.completions.create(
-            model="gpt-3.5-turbo-16k",
-            messages=[
-                {
-                    "role": "system",
-                    "content": "You are a chat robot developed by OpenAI, please response based on the user input"
-                },
-                {
-                    "role": "user",
-                    "content": query
-                }
-            ]
-        )
+        prompt = ChatPromptTemplate.from_template("{query}")
+        llm = ChatOpenAI(model="gpt-3.5-turbo-16k")
+        parser = StrOutputParser()
 
-        content = completion.choices[0].message.content
+        chain = prompt | llm | parser
+
+        content = chain.invoke({"query": req.query.data})
 
         return success_json({"content": content})
 
