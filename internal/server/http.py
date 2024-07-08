@@ -8,6 +8,7 @@
 import os
 
 from flask import Flask
+from flask_cors import CORS
 from flask_migrate import Migrate
 
 from config import Config
@@ -31,6 +32,13 @@ class Http(Flask):
 
         db.init_app(self)
         migrate.init_app(self, db, directory="internal/migration")
+
+        CORS(self, resources={
+            r"/*": {
+                "origins": "*",
+                "supports_credentials": True,
+            }
+        })
 
         # Register application router
         router.register_router(self)
